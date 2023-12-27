@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser')
 const app = express();
+const dns = require('node:dns')
 // Basic Configuration
 const port = process.env.PORT || 3000;
 let urlConverts = new Map()
@@ -24,12 +25,20 @@ app.get('/api/hello', function (req, res) {
 });
 
 app.post('/api/shorturl', (req, res) => {
-  let getURlcode = () => Math.floor(Math.random() * 10000) + 1,
-    URLcode = getURlcode()
 
-  urlConverts.set(URLcode, req.body.url)
-  console.log(urlConverts, 'after setting')
-  res.json({ original_url: req.body.url, short_url: URLcode })
+  dns.lookup(req.body.url, (error) => {
+    if (error.message) return res.json({ error: 'Invalid URL' })
+    else {
+
+      let getURlcode = () => Math.floor(Math.random() * 10000) + 1,
+        URLcode = getURlcode()
+
+      urlConverts.set(URLcode, req.body.url)
+      console.log(urlConverts, 'after setting')
+      res.json({ original_url: req.body.url, short_url: URLcode })
+    }
+  })
+
 })
 
 app.get('/api/shorturl/:urlcode', (req, res) => {
